@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List Frontend</title>
+    <!-- Use Inter font from Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Load Tailwind CSS from CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* General body styling */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9; /* Fallback background color */
+            /* Background image properties */
+            background-image: url("https://i.pinimg.com/736x/04/c8/d7/04c8d71abe131107abf3aa18585fe9a9.jpg");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        /* Main container styling */
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background-color: #ffffff;
+            border-radius: 1.5rem; /* Large rounded corners */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Soft shadow */
+            padding: 2.5rem;
+        }
+
+        /* Styling for the title */
+        h1 {
+            color: #1f2937; /* Dark gray */
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2.5rem; /* Large font size for title */
+            font-weight: 700;
+        }
+
+        /* Styling for the input form */
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        /* Styling for the input field */
+        #todo-input {
+            flex-grow: 1;
+            padding: 0.75rem 1rem;
+            border-radius: 0.75rem; /* Rounded corners */
+            border: 1px solid #d1d5db; /* Light gray border */
+            transition: all 0.2s ease-in-out;
+        }
+        
+        /* Focus state for the input field */
+        #todo-input:focus {
+            outline: none;
+            border-color: #3b82f6; /* Blue border on focus */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25); /* Light blue glow */
+        }
+
+        /* Styling for the button */
+        #add-button {
+            background-color: #3b82f6; /* Blue background */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+
+        /* Hover state for the button */
+        #add-button:hover {
+            background-color: #2563eb; /* Darker blue on hover */
+            transform: translateY(-2px); /* Slight lift effect */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Active state for the button */
+        #add-button:active {
+            transform: translateY(0);
+        }
+
+        /* Styling for the list of items */
+        #todo-list {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        /* Styling for individual list items */
+        .todo-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            background-color: #f8fafc; /* Very light gray */
+            border-radius: 0.75rem;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+        }
+
+        /* Hover effect for list items */
+        .todo-item:hover {
+            background-color: #f1f5f9;
+        }
+
+        /* Styling for completed items */
+        .todo-item.completed {
+            text-decoration: line-through;
+            color: #9ca3af; /* Gray text for completed items */
+            background-color: #e2e8f0;
+        }
+        
+        /* Styling for the delete button */
+        .delete-button {
+            background: none;
+            border: none;
+            color: #ef4444; /* Red color */
+            font-weight: 600;
+            cursor: pointer;
+            transition: color 0.2s ease-in-out;
+        }
+        
+        /* Hover state for delete button */
+        .delete-button:hover {
+            color: #dc2626; /* Darker red on hover */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Main application container -->
+    <div class="container">
+        <h1>My To-Do List</h1>
+
+        <!-- Input form for new tasks -->
+        <form class="input-group">
+            <input type="text" id="todo-input" placeholder="Add a new task...">
+            <button type="submit" id="add-button">Add</button>
+        </form>
+
+        <!-- List where to-do items will be displayed -->
+        <ul id="todo-list">
+            <!-- Sample to-do item (will be dynamically added by JavaScript) -->
+            <!-- <li class="todo-item">
+                <span>Sample Task</span>
+                <button class="delete-button">Delete</button>
+            </li> -->
+        </ul>
+    </div>
+
+    <script>
+  const API_URL = "http://127.0.0.1:8000/todos";
+  const todoList = document.getElementById("todo-list");
+  const todoForm = document.querySelector(".input-group");
+  const todoInput = document.getElementById("todo-input");
+
+  // Fetch all todos
+  async function fetchTodos() {
+    const res = await fetch(API_URL);
+    const todos = await res.json();
+    todoList.innerHTML = "";
+    todos.forEach(todo => renderTodo(todo));
+  }
+
+  // Render a single todo
+  function renderTodo(todo) {
+    const li = document.createElement("li");
+    li.className = "todo-item" + (todo.completed ? " completed" : "");
+    li.innerHTML = `
+      <span onclick="toggleTodo(${todo.id}, ${todo.completed})">${todo.task}</span>
+      <button class="delete-button" onclick="deleteTodo(${todo.id})">Delete</button>
+    `;
+    todoList.appendChild(li);
+  }
+
+  // Add new todo
+  todoForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!todoInput.value) return;
+
+    const newTodo = { id: Date.now(), task: todoInput.value, completed: false };
+
+    await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newTodo),
+    });
+
+    todoInput.value = "";
+    fetchTodos();
+  });
+
+  // Toggle todo completion
+  async function toggleTodo(id, completed) {
+    const res = await fetch(`${API_URL}/${id}`);
+    const todo = await res.json();
+    const updated = { ...todo, completed: !completed };
+
+    await fetch(`${API_URL}/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updated),
+    });
+
+    fetchTodos();
+  }
+
+  // Delete todo
+  async function deleteTodo(id) {
+    await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+    fetchTodos();
+  }
+
+  // Load todos when page opens
+  fetchTodos();
+</script>
+
+
+</body>
+</html>
