@@ -38,10 +38,24 @@ def serve_ios_association():
 # ---------------------------
 # Todo API
 # ---------------------------
-class Todo(BaseModel):
-    id: int
+class TodoCreate(BaseModel):
     task: str
     completed: bool = False
+
+class Todo(TodoCreate):
+    id: int
+
+todos: List[Todo] = []
+next_id = 1
+
+@app.post("/todos", response_model=Todo)
+def create_todo(todo: TodoCreate):
+    global next_id
+    new_todo = Todo(id=next_id, task=todo.task, completed=todo.completed)
+    next_id += 1
+    todos.append(new_todo)
+    return new_todo
+
 
 todos: List[Todo] = []
 
